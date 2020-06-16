@@ -13,6 +13,8 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import { CircularProgress } from '@material-ui/core';
+import Player from '../models/player';
+import PlayerService from '../services/player.service';
 
 function Copyright() {
     return (
@@ -40,8 +42,8 @@ type Form = {
 }
 
 type AuthProps = {
-  isAuthed: boolean,
-  onAuthChanged(): void
+    isAuthed: boolean,
+    onAuthChanged(): void
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -142,10 +144,24 @@ const SignUp: FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: AuthP
         setLoading(true)
         const isFormValid = validateForm();
         if (isFormValid) {
-            AuthenticationService.CreateAccount(form.email.value, form.firstname.value, form.lastname.value, form.password.value).then(result => {
-                if (AuthenticationService.GetCurrentUser()) {
-                  AuthenticationService.SetAuthenticated(true)
-                  onAuthChanged()
+            AuthenticationService.CreateAccount(form.email.value, form.firstname.value, form.lastname.value, form.password.value).then(() => {
+                const user = AuthenticationService.GetCurrentUser()
+                if (user) {
+                    let newPlayer = new Player(user!.id, form.firstname.value, form.lastname.value);
+                    PlayerService.$CheckIfPlayerExist(newPlayer.id).then((document) => {
+                        if (document.exists) {
+                            return
+                        } else {
+                            PlayerService.$CreatePlayer(newPlayer)
+                                .then(() => {
+                                    AuthenticationService.SetAuthenticated(true)
+                                    onAuthChanged()
+                                })
+                                .catch(function (error) {
+                                    console.error("Error creating player: ", error);
+                                });
+                        }
+                    })
                 }
                 history.push('/profil');
             }, error => {
@@ -174,7 +190,7 @@ const SignUp: FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: AuthP
 
     return (
         <Container component="main" maxWidth="xs">
-            {isAuthed && <Redirect to="/profil"/>}
+            {isAuthed && <Redirect to="/profil" />}
             <div className={classes.paper}>
                 <Avatar className={classes.avatar}>
                     <LockOutlinedIcon />

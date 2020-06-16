@@ -3,7 +3,7 @@ export default class FirebaseService {
 
     static database: firebase.firestore.Firestore;
 
-    static GetCurrentUser(): any {
+    static GetCurrentUser(): firebase.User | null {
         FirebaseService.initFirebaseDb()
         return firebase.auth().currentUser;
     }

@@ -14,6 +14,9 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import PlayerService from '../services/player.service';
+import ProfilInfo from '../models/ProfilInfo';
+import Player from '../models/player';
 
 function Copyright() {
   return (
@@ -149,53 +152,65 @@ const Login: React.FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: 
   }
 
   const connectToFacebook = () => {
-    var firebaseConfig = {
-      apiKey: "AIzaSyCUw37XVPKlv7gexsK7WkH57zk3qhRGBO8",
-      authDomain: "urbanplayerz-1e042.firebaseapp.com",
-      databaseURL: "https://urbanplayerz-1e042.firebaseio.com",
-      projectId: "urbanplayerz-1e042",
-      storageBucket: "urbanplayerz-1e042.appspot.com",
-      messagingSenderId: "914446867811",
-      appId: "1:914446867811:web:cdb143086ba3d606374756"
-    };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    var provider = new firebase.auth.FacebookAuthProvider()
-    provider.addScope('user_birthday');
-    firebase.auth().signInWithPopup(provider).then(result => {
-      // This gives you a Facebook Access Token. You can use it to access the Facebook API.
+    AuthenticationService.ConnectToFacebook().then(result => {
+      AuthenticationService.SetAuthenticated(true)
+      onAuthChanged()
       const credential = result.credential as firebase.auth.OAuthCredential;
       var token = credential.accessToken;
       // The signed-in user info.
       var user = result.user;
-      console.log("result")
-      console.log(result)
-      console.log("token")
-      console.log(token)
-      console.log("user")
-      console.log(user)
+      if (!result.additionalUserInfo) {
+        alert("Impossible de récuperer les infos")
+        return
+      }
+      let profilInfo = result.additionalUserInfo!.profile as ProfilInfo
+      let age;
+      if (!profilInfo.birthday) {
+        age = PlayerService.calculate_age(new Date(profilInfo.birthday));
+      }
+      let newPlayer = new Player(user!.uid, profilInfo.first_name, profilInfo.last_name, age);
+      PlayerService.CreatePlayer(newPlayer)
+      history.push("/profil")
     }).catch(error => {
       var errorCode = error.code;
-      var errorMessage = error.message;
-      // The email of the user's account used.
-      var email = error.email;
-      // The firebase.auth.AuthCredential type that was used.
-      var credential = error.credential;
-      console.log("errorCode")
-      console.log(errorCode)
-      console.log("errorMessage")
-      console.log(errorMessage)
-      console.log("email")
-      console.log(email)
-      console.log("credential")
-      console.log(credential)
+      switch (errorCode) {
+        case "auth/account-exists-with-different-credential":
+          alert('🔐 Adresse mail déjà utilisé avec un compte par mot de passe.');
+          break;
+        case "auth/auth-domain-config-required":
+          alert('🔐 problème de configuration.');
+          break;
+        case "auth/cancelled-popup-request":
+          alert('🔐 Thrown if successive popup operations are triggered. Only one popup request is allowed at one time. All the popups would fail with this error except for the last one.');
+          break;
+        case "auth/operation-not-allowed":
+          alert('🔐 Thrown if the type of account corresponding to the credential is not enabled.');
+          break;
+        case "auth/operation-not-supported-in-this-environment":
+          alert('🔐 Thrown if this operation is not supported in the environment your application is running on. "location.protocol" must be http or https.');
+          break;
+        case "auth/popup-blocked":
+          alert('🔐 Thrown if the popup was blocked by the browser, typically when this operation is triggered outside of a click handler.');
+          break;
+        case "auth/unauthorized-domain":
+          alert('🔐 Thrown if the type of account corresponding to the credential is not enabled.');
+          break;
+        case "auth/operation-not-allowed":
+          alert('🔐 Thrown if the type of account corresponding to the credential is not enabled.');
+          break;
+        case "auth/operation-not-allowed":
+          alert('🔐 Thrown if the app domain is not authorized.');
+          break;
+        default:
+          break;
+      }
     });
   }
 
   return (
     <Container component="main" maxWidth="xs">
-      {isAuthed && <Redirect to="/profil"/>}
+      {isAuthed && <Redirect to="/profil" />}
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
@@ -258,6 +273,7 @@ const Login: React.FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: 
           variant="contained"
           color="primary"
           className={classes.btnFacebook}
+          onClick={connectToFacebook}
         >
           Connexion par Facebook
         </Button>

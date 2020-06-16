@@ -1,7 +1,15 @@
 import firebase from "firebase";
 import FirebaseService from "./firebase-service";
+import User from "../models/user";
 
 export default class AuthentificationService {
+    static private_currentUser: User | null = null;
+
+    static ConnectToFacebook(): Promise<firebase.auth.UserCredential> {
+        var provider = new firebase.auth.FacebookAuthProvider()
+        provider.addScope('user_birthday');
+        return firebase.auth().signInWithPopup(provider)
+    }
 
     static async InitAuthentification() {
         FirebaseService.initFirebaseDb()
@@ -11,7 +19,7 @@ export default class AuthentificationService {
                 resolve(user);
             }, reject);
         });
-        if (firebase.auth().currentUser){
+        if (firebase.auth().currentUser) {
             AuthentificationService.isAuthenticated = true
         } else {
             AuthentificationService.isAuthenticated = false
@@ -22,7 +30,20 @@ export default class AuthentificationService {
         AuthentificationService.isAuthenticated = newValue
     }
     static GetCurrentUser() {
-        return firebase.auth().currentUser;
+        if (this.private_currentUser) {
+            return this.private_currentUser;
+        }
+        const userFromFB = firebase.auth().currentUser
+        if (!userFromFB?.uid)
+            alert("erreur d'id")
+        if (!userFromFB?.email)
+            alert("erreur d'email")
+        const id = userFromFB!.uid
+        const email = userFromFB!.email ? userFromFB!.email : "";
+        const birthday = new Date()
+        let user = new User(id, email, birthday)
+        this.private_currentUser = user;
+        return user;
     }
     static isAuthenticated: boolean = false;
 
@@ -36,21 +57,5 @@ export default class AuthentificationService {
 
     static CreateAccount(email: string, firstname: string, lastname: string, password: string): Promise<firebase.auth.UserCredential> {
         return firebase.auth().createUserWithEmailAndPassword(email, password)
-
-        let data = {
-            name: 'Los Angeles',
-            state: 'CA',
-            country: 'USA'
-        };
-
-        FirebaseService.database.collection("Users").get().then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                console.log(`${doc.id} => ${doc.get('test')}`);
-            });
-        });
-        const userRef = FirebaseService.database.collection("Users").add({
-            fullname: data.name,
-            email: data.state
-        });
     }
 }

@@ -1,9 +1,8 @@
 import React, { FunctionComponent, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Link, Switch, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, useHistory, Redirect } from 'react-router-dom';
 
 import PrivateRoute from './PrivateRoute';
 import PageNotFound from './pages/page-not-found';
-import PokemonList from './pages/pokemon-list';
 import Login from './pages/login';
 import SignUp from './pages/signup';
 import AuthentificationService from './services/authentication';
@@ -20,6 +19,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import { LinearProgress, CssBaseline } from '@material-ui/core';
+import PlayerService from './services/player.service';
 
 const useStyles = makeStyles((theme: Theme) =>
    createStyles({
@@ -38,8 +38,10 @@ const useStyles = makeStyles((theme: Theme) =>
 const App: FunctionComponent = () => {
 
    const classes = useStyles();
-   const [isAuthenticated, setAuth] = React.useState<boolean>(false);
-   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+   const history = useHistory();
+   const [isAuthenticated, setAuth] = useState<boolean>(false);
+   const [isLoading, setIsLoading] = useState<boolean>(true);
+
 
    useEffect(() => {
       async function InitAuthentification() {
@@ -51,16 +53,13 @@ const App: FunctionComponent = () => {
    }, [])
 
 
-   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-   const open = Boolean(anchorEl);
+   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
    const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-      console.log(isAuthenticated)
       setAnchorEl(event.currentTarget);
    };
 
    const handleClose = () => {
-      console.log(isAuthenticated)
       setAnchorEl(null);
    };
 
@@ -72,11 +71,11 @@ const App: FunctionComponent = () => {
       console.log("AuthenticationService.GetCurrentUser()")
       console.log(AuthentificationService.GetCurrentUser())
       setAnchorEl(null);
-      AuthentificationService.LogOut().then(function() {
+      AuthentificationService.LogOut().then(function () {
          AuthentificationService.SetAuthenticated(false)
          setAuth(false)
-      }).catch(function(error) {
-        alert("erreur sur la déconnexion")
+      }).catch(function (error) {
+         alert("erreur sur la déconnexion")
       });
    };
 
@@ -87,6 +86,9 @@ const App: FunctionComponent = () => {
       console.log(AuthentificationService.isAuthenticated)
       console.log("AuthenticationService.GetCurrentUser()")
       console.log(AuthentificationService.GetCurrentUser())
+      console.log("PlayerService.GetCurrentPlayer()")
+      console.log(PlayerService.GetCurrentPlayer())
+      
    };
 
    const onAuthChanged = () => {
@@ -96,7 +98,7 @@ const App: FunctionComponent = () => {
    return (
       <Router>
          <CssBaseline />
-         <div>
+         <div className={classes.root}>
             {/* bar de nav*/}
             <AppBar position="static">
                <Toolbar>
@@ -129,7 +131,7 @@ const App: FunctionComponent = () => {
                               vertical: 'top',
                               horizontal: 'right',
                            }}
-                           open={open}
+                           open={Boolean(anchorEl)}
                            onClose={handleClose}
                         >
                            <MenuItem onClick={handleClose}>Profil</MenuItem>
@@ -150,11 +152,10 @@ const App: FunctionComponent = () => {
                <LinearProgress />
                :
                <Switch>
-                  <PrivateRoute exact path="/" component={PokemonList}></PrivateRoute>
+                  <Route exact path="/"><Redirect to="/login" /></Route>
                   <Route exact path="/login" render={(props) => <Login {...props} isAuthed={isAuthenticated} onAuthChanged={onAuthChanged} />}></Route>
                   <Route exact path="/signup" render={(props) => <SignUp {...props} isAuthed={isAuthenticated} onAuthChanged={onAuthChanged} />}></Route>
                   <PrivateRoute exact path="/profil" component={Profil}></PrivateRoute>
-                  <PrivateRoute exact path="/pokemons" component={PokemonList}></PrivateRoute>
                   <Route component={PageNotFound}></Route>
                </Switch>
             }
