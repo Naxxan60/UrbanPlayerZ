@@ -1,4 +1,5 @@
 export default class ProfilInfo {
+    picture: any;
     first_name: string;
     last_name: string;
     name: string;

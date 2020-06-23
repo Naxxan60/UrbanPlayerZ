@@ -63,6 +63,11 @@ export default class PlayerService {
         .set(Object.assign({}, newPlayer))
     }
 
+    static $UpdatePlayer(player: Player) {
+        var playerRef = FirebaseService.database.collection(this.PLAYERS_DBNAME).doc(player.id)
+        return playerRef.update(Object.assign({}, player))
+    }
+
     static calculate_age(birthdate: Date) { 
         var diff_ms = Date.now() - birthdate.getTime();
         var age_dt = new Date(diff_ms); 

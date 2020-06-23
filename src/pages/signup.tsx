@@ -156,6 +156,7 @@ const SignUp: FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: AuthP
                                 .then(() => {
                                     AuthenticationService.SetAuthenticated(true)
                                     onAuthChanged()
+                                    history.push('/profil');
                                 })
                                 .catch(function (error) {
                                     console.error("Error creating player: ", error);
@@ -163,7 +164,6 @@ const SignUp: FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: AuthP
                         }
                     })
                 }
-                history.push('/profil');
             }, error => {
                 var errorCode = error.code;
                 switch (errorCode) {

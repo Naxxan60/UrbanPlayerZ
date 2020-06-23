@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Switch, Route, useHistory, Redirect } from 'react-router-dom';
+import { Switch, Route, useHistory, Redirect } from 'react-router-dom';
 
 import PrivateRoute from './PrivateRoute';
 import PageNotFound from './pages/page-not-found';
@@ -20,6 +20,8 @@ import Menu from '@material-ui/core/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import { LinearProgress, CssBaseline } from '@material-ui/core';
 import PlayerService from './services/player.service';
+import Interview from './pages/interview';
+import { env } from 'process';
 
 const useStyles = makeStyles((theme: Theme) =>
    createStyles({
@@ -63,6 +65,16 @@ const App: FunctionComponent = () => {
       setAnchorEl(null);
    };
 
+   const handleProfilClick = () => {
+      setAnchorEl(null);
+      history.push("/profil")
+   };
+
+   const handleInterviewClick = () => {
+      setAnchorEl(null);
+      history.push("/interview")
+   };
+
    const handleLogout = () => {
       console.log("isAuthenticated")
       console.log(isAuthenticated)
@@ -80,15 +92,16 @@ const App: FunctionComponent = () => {
    };
 
    const testAuth = () => {
-      console.log("isAuthenticated")
-      console.log(isAuthenticated)
-      console.log("AuthenticationService.isAuthenticated")
-      console.log(AuthentificationService.isAuthenticated)
-      console.log("AuthenticationService.GetCurrentUser()")
-      console.log(AuthentificationService.GetCurrentUser())
-      console.log("PlayerService.GetCurrentPlayer()")
-      console.log(PlayerService.GetCurrentPlayer())
-      
+      if (process.env["NODE_ENV"] != "production") {
+         console.log("isAuthenticated")
+         console.log(isAuthenticated)
+         console.log("AuthenticationService.isAuthenticated")
+         console.log(AuthentificationService.isAuthenticated)
+         console.log("AuthenticationService.GetCurrentUser()")
+         console.log(AuthentificationService.GetCurrentUser())
+         console.log("PlayerService.GetCurrentPlayer()")
+         console.log(PlayerService.GetCurrentPlayer())
+      }
    };
 
    const onAuthChanged = () => {
@@ -96,71 +109,70 @@ const App: FunctionComponent = () => {
    };
 
    return (
-      <Router>
+      <div className={classes.root}>
          <CssBaseline />
-         <div className={classes.root}>
-            {/* bar de nav*/}
-            <AppBar position="static">
-               <Toolbar>
-                  <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu" onClick={testAuth}>
-                     <MenuIcon />
-                  </IconButton>
-                  <Typography variant="h6" className={classes.title}>
-                     Urban Player Z
+         {/* bar de nav*/}
+         <AppBar position="static">
+            <Toolbar>
+               <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu" onClick={testAuth}>
+                  <MenuIcon />
+               </IconButton>
+               <Typography variant="h6" className={classes.title}>
+                  Urban Player Z
                   </Typography>
-                  {isAuthenticated ?
-                     <div>
-                        <IconButton
-                           aria-label="account of current user"
-                           aria-controls="menu-appbar"
-                           aria-haspopup="true"
-                           onClick={handleMenu}
-                           color="inherit"
-                        >
-                           <AccountCircle />
-                        </IconButton>
-                        <Menu
-                           id="menu-appbar"
-                           anchorEl={anchorEl}
-                           anchorOrigin={{
-                              vertical: 'top',
-                              horizontal: 'right',
-                           }}
-                           keepMounted
-                           transformOrigin={{
-                              vertical: 'top',
-                              horizontal: 'right',
-                           }}
-                           open={Boolean(anchorEl)}
-                           onClose={handleClose}
-                        >
-                           <MenuItem onClick={handleClose}>Profil</MenuItem>
-                           <MenuItem onClick={handleClose}>Mon compte</MenuItem>
-                           <MenuItem onClick={handleLogout}>Déconnexion</MenuItem>
-                        </Menu>
-                     </div>
-                     :
-                     <div>
-                        <Button color="inherit" href="/login">Connexion</Button>
-                        <Button color="inherit" href="/signup">S'inscrire</Button>
-                     </div>
-                  }
-               </Toolbar>
-            </AppBar>
-            {/* systeme de gestion des routes*/}
-            {isLoading ?
-               <LinearProgress />
-               :
-               <Switch>
-                  <Route exact path="/"><Redirect to="/login" /></Route>
-                  <Route exact path="/login" render={(props) => <Login {...props} isAuthed={isAuthenticated} onAuthChanged={onAuthChanged} />}></Route>
-                  <Route exact path="/signup" render={(props) => <SignUp {...props} isAuthed={isAuthenticated} onAuthChanged={onAuthChanged} />}></Route>
-                  <PrivateRoute exact path="/profil" component={Profil}></PrivateRoute>
-                  <Route component={PageNotFound}></Route>
-               </Switch>
-            }
-         </div>
-      </Router>
+               {isAuthenticated ?
+                  <div>
+                     <IconButton
+                        aria-label="account of current user"
+                        aria-controls="menu-appbar"
+                        aria-haspopup="true"
+                        onClick={handleMenu}
+                        color="inherit"
+                     >
+                        <AccountCircle />
+                     </IconButton>
+                     <Menu
+                        id="menu-appbar"
+                        anchorEl={anchorEl}
+                        anchorOrigin={{
+                           vertical: 'top',
+                           horizontal: 'right',
+                        }}
+                        keepMounted
+                        transformOrigin={{
+                           vertical: 'top',
+                           horizontal: 'right',
+                        }}
+                        open={Boolean(anchorEl)}
+                        onClose={handleClose}
+                     >
+                        <MenuItem onClick={handleProfilClick}>Profil</MenuItem>
+                        <MenuItem onClick={handleInterviewClick}>Interview</MenuItem>
+                        <MenuItem onClick={handleLogout}>Déconnexion</MenuItem>
+                     </Menu>
+                  </div>
+                  :
+                  <div>
+                     <Button color="inherit" href="/login">Connexion</Button>
+                     <Button color="inherit" href="/signup">S'inscrire</Button>
+                  </div>
+               }
+            </Toolbar>
+         </AppBar>
+         {/* systeme de gestion des routes*/}
+         {isLoading ?
+            <LinearProgress />
+            :
+            <Switch>
+               <Route exact path="/"><Redirect to="/login" /></Route>
+               <Route exact path="/login" render={(props) => <Login {...props} isAuthed={isAuthenticated} onAuthChanged={onAuthChanged} />}></Route>
+               <Route exact path="/signup" render={(props) => <SignUp {...props} isAuthed={isAuthenticated} onAuthChanged={onAuthChanged} />}></Route>
+               <PrivateRoute exact path="/profil" component={Profil}></PrivateRoute>
+               <PrivateRoute exact path="/interview" component={Interview}></PrivateRoute>
+               <Route component={PageNotFound}></Route>
+            </Switch>
+         }
+      </div>
    )
 }
 

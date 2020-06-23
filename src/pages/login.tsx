@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useHistory, Redirect } from 'react-router-dom';
 import AuthenticationService from '../services/authentication';
-import * as firebase from "firebase/app";
 import "firebase/auth";
 
 import Avatar from '@material-ui/core/Avatar';
@@ -154,11 +153,6 @@ const Login: React.FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: 
   const connectToFacebook = () => {
 
     AuthenticationService.ConnectToFacebook().then(result => {
-      AuthenticationService.SetAuthenticated(true)
-      onAuthChanged()
-      const credential = result.credential as firebase.auth.OAuthCredential;
-      var token = credential.accessToken;
-      // The signed-in user info.
       var user = result.user;
       if (!result.additionalUserInfo) {
         alert("Impossible de récuperer les infos")
@@ -166,12 +160,31 @@ const Login: React.FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: 
       }
       let profilInfo = result.additionalUserInfo!.profile as ProfilInfo
       let age;
-      if (!profilInfo.birthday) {
+      let photo;
+      if (profilInfo.birthday) {
         age = PlayerService.calculate_age(new Date(profilInfo.birthday));
       }
-      let newPlayer = new Player(user!.uid, profilInfo.first_name, profilInfo.last_name, age);
-      PlayerService.CreatePlayer(newPlayer)
-      history.push("/profil")
+      if (profilInfo.picture?.data?.url) {
+        photo = profilInfo.picture?.data?.url
+      }
+      let newPlayer = new Player(user!.uid, profilInfo.first_name, profilInfo.last_name, age, null, photo);
+      PlayerService.$CheckIfPlayerExist(newPlayer.id).then((document) => {
+        if (document.exists) {
+          AuthenticationService.SetAuthenticated(true)
+          onAuthChanged()
+          history.push("/profil")
+        } else {
+          PlayerService.$CreatePlayer(newPlayer)
+            .then(() => {
+              AuthenticationService.SetAuthenticated(true)
+              onAuthChanged()
+              history.push("/profil")
+            })
+            .catch(function (error) {
+              console.error("Error creating player: ", error);
+            });
+        }
+      })
     }).catch(error => {
       var errorCode = error.code;
       switch (errorCode) {
