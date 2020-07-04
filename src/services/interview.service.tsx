@@ -1,5 +1,6 @@
 import FirebaseService from "./firebase-service";
 import { AnswersInterviewType } from "../helper/questions-interview";
+import firebase from "firebase";
 
 export default class InterviewService {
     static INTERVIEW_DBNAME: string = "Interviews";
@@ -25,6 +26,10 @@ export default class InterviewService {
         } else {
             return null
         }
+    }
+    static $DeleteInterview(id: string) {
+        var interviewRef = FirebaseService.database.collection(this.INTERVIEW_DBNAME).doc(id)
+        return interviewRef.delete()
     }
 
     static $UpdateInterview(id: string, answers: AnswersInterviewType[]) {

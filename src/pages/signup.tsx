@@ -160,6 +160,7 @@ const SignUp: FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: AuthP
                                 })
                                 .catch(function (error) {
                                     console.error("Error creating player: ", error);
+                                    setLoading(false)
                                 });
                         }
                     })
@@ -182,10 +183,12 @@ const SignUp: FunctionComponent<AuthProps> = ({ isAuthed, onAuthChanged }: AuthP
                     default:
                         break;
                 }
+                setLoading(false)
             });
         } else {
             alert('non valid');
         }
+        setLoading(false)
     }
 
     return (

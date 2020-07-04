@@ -86,23 +86,30 @@ const Interview: FunctionComponent = () => {
     e.preventDefault();
     InterviewService.$CheckIfInterviewExist(user!.id).then((document) => {
       if (document.exists) {
-        InterviewService.$UpdateInterview(user!.id, form.answers).then(() => {
-          enqueueSnackbar('Modification enregistré', { variant: "success" });
+        InterviewService.$DeleteInterview(user!.id).then(() => {
+          InterviewService.$CreateInterview(user!.id, form.answers)
+            .then(() => {
+              enqueueSnackbar('Modification enregistré', { variant: "success" });
+            })
+            .catch(function (error) {
+              enqueueSnackbar("Problème d'enregistrement", { variant: "error" })
+              console.error("Error creating after deleting interview: ", error);
+            });
         }).catch(function (error) {
           enqueueSnackbar("Problème d'enregistrement", { variant: "error" })
-          console.error("Error updating interview: ", error);
+          console.error("Error deleting interview: ", error);
         });
       } else {
         InterviewService.$CreateInterview(user!.id, form.answers)
-              .then(() => {
-                enqueueSnackbar('Modification enregistré', { variant: "success" });
-              })
-              .catch(function (error) {
-                enqueueSnackbar("Problème d'enregistrement", { variant: "error" })
-                console.error("Error creating interview: ", error);
-              });
+          .then(() => {
+            enqueueSnackbar('Modification enregistré', { variant: "success" });
+          })
+          .catch(function (error) {
+            enqueueSnackbar("Problème d'enregistrement", { variant: "error" })
+            console.error("Error creating interview: ", error);
+          });
       }
-  }).then(() => {
+    }).then(() => {
     }).catch(function (error) {
       enqueueSnackbar("Problème d'enregistrement", { variant: "error" })
       console.error("Error checking interview: ", error);
@@ -120,8 +127,9 @@ const Interview: FunctionComponent = () => {
     setForm({ ...form, ...form });
   }
 
-  const handleDeleteAnswer = (): void => {
-    alert("not done")
+  const handleDeleteAnswer = (code: string): void => {
+    form.answers = form.answers.filter(ans => ans.code != code)
+    setForm({ ...form, ...form });
   }
 
   const handleAddNewQuestion = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -168,7 +176,7 @@ const Interview: FunctionComponent = () => {
               />
             </Grid>
             <Grid item xs={2}>
-              <IconButton aria-label="delete" onClick={handleDeleteAnswer}>
+              <IconButton aria-label="delete" onClick={() => handleDeleteAnswer(code)}>
                 <DeleteIcon />
               </IconButton>
             </Grid>
